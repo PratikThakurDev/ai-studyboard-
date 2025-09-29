@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 app.use(cors());
@@ -15,41 +17,63 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-app.get('/', (req, res) => {
-  res.send('API running...');
-});
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
-app.get('/api/test', async (req, res) => {
-  try {
-    const result = await pool.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public'");
-    res.json({ tables: result.rows });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
-  }
-});
+// Helper middleware to verify token and set req.userId
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).send('Access Denied');
 
-app.post('/api/users', async (req, res) => {
-  const { username, email, password_hash } = req.body;
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).send('Invalid token');
+    req.userId = user.userId;
+    next();
+  });
+}
+
+// Auth - Register
+app.post('/api/auth/register', async (req, res) => {
+  const { username, email, password } = req.body;
   try {
+    const password_hash = await bcrypt.hash(password, 10);
     const result = await pool.query(
-      `INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING *`,
+      `INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email`,
       [username, email, password_hash]
     );
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    res.status(500).send('Error creating user');
+    res.status(500).send('Error registering user');
   }
 });
 
-// Create a new note
-app.post('/api/notes', async (req, res) => {
-  const { user_id, title, content } = req.body;
+// Auth - Login
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const userRes = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (userRes.rows.length === 0) return res.status(400).send('Invalid credentials');
+
+    const user = userRes.rows[0];
+    const validPassword = await bcrypt.compare(password, user.password_hash);
+    if (!validPassword) return res.status(400).send('Invalid credentials');
+
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token, user: { id: user.id, username: user.username, email: user.email } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error logging in');
+  }
+});
+
+// Protected Note APIs - Only accessible with valid token
+app.post('/api/notes', authenticateToken, async (req, res) => {
+  const { title, content } = req.body;
   try {
     const result = await pool.query(
       `INSERT INTO notes (user_id, title, content) VALUES ($1, $2, $3) RETURNING *`,
-      [user_id, title, content]
+      [req.userId, title, content]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -58,13 +82,11 @@ app.post('/api/notes', async (req, res) => {
   }
 });
 
-// Get all notes of a user
-app.get('/api/notes/:user_id', async (req, res) => {
-  const userId = req.params.user_id;
+app.get('/api/notes', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT * FROM notes WHERE user_id = $1 ORDER BY created_at DESC`,
-      [userId]
+      [req.userId]
     );
     res.json(result.rows);
   } catch (err) {
@@ -72,7 +94,6 @@ app.get('/api/notes/:user_id', async (req, res) => {
     res.status(500).send('Error fetching notes');
   }
 });
-
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
