@@ -1,22 +1,28 @@
-POST http://localhost:5000/api/users
+POST http://localhost:5000/api/auth/register
 Content-Type: application/json
 
 {
-  "username": "testuser",
-  "email": "testuser@example.com",
-  "password_hash": "hashedpassword123"
+  "username": "testuser2",
+  "email": "testuser2@example.com",
+  "password": "testpassword123"
+}
+
+###
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser2@example.com",
+  "password": "testpassword123"
 }
 
 ###
 POST http://localhost:5000/api/notes
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsImlhdCI6MTc1OTE1Mzg4MiwiZXhwIjoxNzU5MTU3NDgyfQ._OAXG3_sUX4Zqh8klOfO-QA5SnPOkhbDfCowxPZQjfA
 
 {
-  "user_id": 1,
-  "title": "Sample Note",
-  "content": "This is a sample note content."
+  "title": "My secure note",
+  "content": "This note is created with authentication."
 }
-
-###
-GEt http://localhost:5000/api/notes/1
 
