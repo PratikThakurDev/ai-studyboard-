@@ -6,3 +6,17 @@ Content-Type: application/json
   "email": "testuser@example.com",
   "password_hash": "hashedpassword123"
 }
+
+###
+POST http://localhost:5000/api/notes
+Content-Type: application/json
+
+{
+  "user_id": 1,
+  "title": "Sample Note",
+  "content": "This is a sample note content."
+}
+
+###
+GEt http://localhost:5000/api/notes/1
+

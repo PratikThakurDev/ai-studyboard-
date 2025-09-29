@@ -43,6 +43,36 @@ app.post('/api/users', async (req, res) => {
   }
 });
 
+// Create a new note
+app.post('/api/notes', async (req, res) => {
+  const { user_id, title, content } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO notes (user_id, title, content) VALUES ($1, $2, $3) RETURNING *`,
+      [user_id, title, content]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error creating note');
+  }
+});
+
+// Get all notes of a user
+app.get('/api/notes/:user_id', async (req, res) => {
+  const userId = req.params.user_id;
+  try {
+    const result = await pool.query(
+      `SELECT * FROM notes WHERE user_id = $1 ORDER BY created_at DESC`,
+      [userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error fetching notes');
+  }
+});
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
