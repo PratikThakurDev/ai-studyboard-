@@ -81,6 +81,19 @@ const Dashboard = () => {
     }
   };
 
+  const handleDelete = async (noteId) => {
+    if (!window.confirm('Are you sure you want to delete this note?')) return;
+    try {
+      await axios.delete(`http://localhost:5000/api/notes/${noteId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotes(notes.filter(note => note.id !== noteId));
+      setMessage('Note deleted successfully');
+    } catch {
+      setMessage('Error deleting note');
+    }
+  };
+
   return (
     <div>
       <h2>Dashboard</h2>
@@ -129,6 +142,7 @@ const Dashboard = () => {
                 <>
                   <strong>{note.title}</strong>: {note.content}
                   <button onClick={() => startEdit(note)}>Edit</button>
+                  <button onClick={() => handleDelete(note.id)}>Delete</button>
                 </>
               )}
             </li>
