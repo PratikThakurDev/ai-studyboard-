@@ -113,6 +113,22 @@ app.put('/api/notes/:id', authenticateToken, async (req, res) => {
   }
 });
 
+app.delete('/api/notes/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      `DELETE FROM notes WHERE id = $1 AND user_id = $2 RETURNING *`,
+      [id, req.userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).send('Note not found or unauthorized');
+    }
+    res.json({ message: 'Note deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error deleting note');
+  }
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

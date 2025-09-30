@@ -2,9 +2,9 @@ POST http://localhost:5000/api/auth/register
 Content-Type: application/json
 
 {
-  "username": "testuser2",
-  "email": "testuser2@example.com",
-  "password": "testpassword123"
+  "username": "opboi",
+  "email": "opboi@gmail.com",
+  "password": "aa"
 }
 
 ###
@@ -12,8 +12,8 @@ POST http://localhost:5000/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "testuser2@example.com",
-  "password": "testpassword123"
+  "email": "opboi@gmail.com",
+  "password": "aa"
 }
 
 ###
@@ -26,3 +26,16 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsImlhd
   "content": "This note is created with authentication."
 }
 
+### 
+PUT http://localhost:5000/api/notes/4
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjYsImlhdCI6MTc1OTI0MzAzNSwiZXhwIjoxNzU5MjQ2NjM1fQ.UPdoT4RtzeBIqDSpTy5N7I24lWvuyQV2_ozga3BrXAM
+Content-Type: application/json
+
+{
+  "title": "Updated Note Title",
+  "content": "Updated content for the note."
+}
+
+###
+DELETE http://localhost:5000/api/notes/4
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjYsImlhdCI6MTc1OTI0MzAzNSwiZXhwIjoxNzU5MjQ2NjM1fQ.UPdoT4RtzeBIqDSpTy5N7I24lWvuyQV2_ozga3BrXAM
