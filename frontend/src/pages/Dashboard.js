@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // <-- Import
 
 const Dashboard = () => {
   const [notes, setNotes] = useState([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [message, setMessage] = useState('');
+  const navigate = useNavigate(); // <-- Initialize
 
   const token = localStorage.getItem('token');
 
   useEffect(() => {
     if (!token) return;
-
     axios.get('http://localhost:5000/api/notes', {
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -38,11 +39,17 @@ const Dashboard = () => {
     }
   };
 
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
+
   return (
     <div>
       <h2>Dashboard</h2>
+      <button onClick={handleLogout}>Logout</button>
       {message && <p>{message}</p>}
-
       <form onSubmit={handleSubmit}>
         <input
           placeholder="Title"
@@ -58,7 +65,6 @@ const Dashboard = () => {
         />
         <button type="submit">Add Note</button>
       </form>
-
       <h3>Your Notes</h3>
       {notes.length === 0 ? (
         <p>No notes yet.</p>
