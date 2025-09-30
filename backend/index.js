@@ -95,5 +95,24 @@ app.get('/api/notes', authenticateToken, async (req, res) => {
   }
 });
 
+app.put('/api/notes/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { title, content } = req.body;
+  try {
+    const result = await pool.query(
+      `UPDATE notes SET title = $1, content = $2 WHERE id = $3 AND user_id = $4 RETURNING *`,
+      [title, content, id, req.userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).send('Note not found or unauthorized');
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error updating note');
+  }
+});
+
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
